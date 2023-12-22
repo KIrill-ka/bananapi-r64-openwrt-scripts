@@ -1,0 +1,38 @@
+Сборка openwrt
+
+1) получение исходников
+git clone https://github.com/openwrt/openwrt.git
+git checkout v23.05.2
+cd openwrt
+scripts/feeds update
+
+# web-интерфейс (luci)
+scripts/feeds install cgi-io
+scripts/feeds install -a -p luci
+
+# iperf
+scripts/feeds install iperf
+scripts/feeds install iperf3
+
+# поддержка snmp
+scripts/feeds install snmpd
+
+# дополнительные пакеты snmp
+scripts/feeds install snmp-mibs
+scripts/feeds install snmp-utils
+
+# relayd
+scripts/feeds install relayd
+
+cd ..
+
+
+2) подготовка конфигурации openwrt
+git clone https://github.com/KIrill-ka/bananapi-r64-openwrt-scripts.git
+cp bananapi-r64-openwrt-scripts/diffconfig openwrt/.config
+cd openwrt
+make defconfig
+make download
+
+3) сборка (-j4 параллельная сборка в 4 параллельных процесса)
+make -j4

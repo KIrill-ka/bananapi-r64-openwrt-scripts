@@ -1,0 +1,63 @@
+Установка/обновление openwrt
+
+1) установить environment-переменную - корень сборки openwrt
+Пример:
+export BUILDROOT=openwrt
+
+2) подготовить пакеты для отсылки на устройство
+bananapi-r64-openwrt-scripts/prepare-packages.sh
+
+3) записать образ на SD-карту (mmcblk0 заменить на 
+   правильное имя устройста, НЕ ПЕРЕПУТАТЬ!)
+  zcat $BUILDROOT/bin/targets/mediatek/mt7622/openwrt-mediatek-mt7622-bananapi_bpi-r64-sdcard.img.gz \
+    > /dev/mmcblk0
+  sync
+
+4.1) установка на emmc
+fw_setenv bootcmd run emmc_init
+перезагрузиться
+
+4.2) установка на nand:
+fw_setenv bootcmd run ubi_init
+перезагрузиться
+
+5) Решаем, с какого из 3 источников будем загружаться.
+Затем установить переключатель загрузки в соответствующее положение:
+> положение SW1=0 - порядок загрузки: NAND, EMMC, SD
+> положение SW1=1 - SD, EMMC
+При необходимости удаляем SD-карту из слота.
+И продолжаем устанавливать пакеты будучи загруженными с нужного источника.
+Источник загрузки можно проверить по сообщениями U-Boot (например: Loading Environment from MMC)
+
+6) подключить Ethernet-кабель к одному из портов встроенного коммутатора
+(одному из 4-х портов)
+получить адрес по DHCP от openwrt-устройства
+
+7) установить переменную IP
+IP=192.168.1.1
+
+8) скопировать пакеты на устройство
+scp bpi-pkgs.tar root@$IP:/tmp/
+
+9) зайти на устройство по ssh
+ssh root@$IP
+
+10) распаковать архив с пакетами, подготовить список пакетов
+cd /
+tar xvf /tmp/bpi-pkgs.tar
+opkg update
+
+11) установить нужные пакеты
+opkg install luci
+opkg install luci-mod-dashboard
+opkg install iperf
+opkg install luci-i18n-base-ru
+opkg install snmpd
+opkg install relayd
+opkg install luci-proto-relay
+opkg install kmod-mt7916-firmware
+
+25) обновление из консоли (если web-интерфейс доступен, то можно вместо этого обновиться
+через luci)
+# выполнить обновление (-n - без сохранения настроек: sysupgrade -v -n)
+sysupgrade openwrt-mediatek-mt7622-bananapi_bpi-r64-squashfs-sysupgrade.itb
